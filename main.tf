@@ -52,3 +52,32 @@ module "vpc" {
     Environment = "dev"
   }
 }
+
+resource "aws_instance" "example-instance" {
+  ami = "${data.aws_ami.AL2.id}"
+  instance_type = "t2.large"
+  subnet_id = module.vpc.private_subnets[0]
+}
+
+
+data "aws_ami" "AL2" {
+ most_recent = true
+ owners = ["amazon"] #self
+
+ filter {
+   name   = "name"
+   values = ["amzn2-ami-hvm*"]
+ }
+}
+
+terraform {
+  required_version = "~> 0.12"
+
+  backend "s3" {
+    region         = "ap-southeast-2"
+    encrypt        = true
+    bucket         = "tfl3-terraform-backend"
+    key            = "terraform.tfstate"
+    dynamodb_table = "tfl3-tfstatelock"
+  }
+}
